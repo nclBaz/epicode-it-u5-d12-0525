@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import riccardogulin.u5d12.entities.User;
 import riccardogulin.u5d12.exceptions.BadRequestException;
@@ -22,12 +23,14 @@ import java.util.UUID;
 public class UsersService {
 	private final UsersRepository usersRepository;
 	// private final Cloudinary cloudinaryUploader;
+	private final PasswordEncoder bcrypt;
 
 	@Autowired
-	public UsersService(UsersRepository usersRepository) {
+	public UsersService(UsersRepository usersRepository, PasswordEncoder passwordEncoder) {
 
 		this.usersRepository = usersRepository;
 		// this.cloudinaryUploader = cloudinaryUploader;
+		this.bcrypt = passwordEncoder;
 	}
 
 	public User save(UserDTO payload) {
@@ -38,7 +41,7 @@ public class UsersService {
 		});
 
 		// 2. Aggiungo dei campi "server-generated" tipo avatarURL
-		User newUser = new User(payload.name(), payload.surname(), payload.email(), payload.password());
+		User newUser = new User(payload.name(), payload.surname(), payload.email(), bcrypt.encode(payload.password()));
 		newUser.setAvatarURL("https://ui-avatars.com/api?name=" + payload.name() + "+" + payload.surname());
 
 		// 3. Salvo

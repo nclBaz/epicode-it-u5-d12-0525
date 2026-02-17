@@ -1,6 +1,7 @@
 package riccardogulin.u5d12.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import riccardogulin.u5d12.entities.User;
 import riccardogulin.u5d12.exceptions.UnauthorizedException;
@@ -12,12 +13,14 @@ public class AuthService {
 
 	private final UsersService usersService;
 	private final JWTTools jwtTools;
+	private final PasswordEncoder bcrypt;
 
 	@Autowired
-	public AuthService(UsersService usersService, JWTTools jwtTools) {
+	public AuthService(UsersService usersService, JWTTools jwtTools, PasswordEncoder bcrypt) {
 
 		this.usersService = usersService;
 		this.jwtTools = jwtTools;
+		this.bcrypt = bcrypt;
 	}
 
 	public String checkCredentialsAndGenerateToken(LoginDTO body) {
@@ -26,8 +29,8 @@ public class AuthService {
 		User found = this.usersService.findByEmail(body.email());
 
 		// 1.2 Se esiste controllo se la sua password (quella nel DB) è uguale a quella nel body
-		// TODO: migliorare gestione password
-		if (found.getPassword().equals(body.password())) {
+		
+		if (bcrypt.matches(body.password(), found.getPassword())) {
 			// 2. Se credenziali OK
 			// 2.1 Genero token
 			String accessToken = jwtTools.generateToken(found);
